@@ -15,9 +15,8 @@ susceptibles = 0.98 #initial fraction of population susceptible
 b = 10 #per-capita birth rate
 c = 10*b #recovery rate of disease
 
-parameters = [b,c,R,vac] #packeaged for passing into DE
 
-ics = [susceptibles, 1-susceptibles, 0] #initial conditions for DE problem
+ics = [susceptibles, 1-susceptibles, 0] #initial conditions for DE problem. u_0, v_0, w_0 respectively
 
 
 
@@ -34,4 +33,10 @@ using OrdinaryDiffEq
 
 problem = ODEProblem(pandemicDEs!, ics, tspan)
 
-sol = solve(problem, Tsit5())
+sol = solve(problem, Tsit5()) #stored as a 2 dimensional array. Access as sol[i,:]. i=1 gives time, i=2,3,4 give u,v,w respectively.
+
+times = LinRange(tstart, tend, length(sol[1,:]))
+
+
+myplot = plot(times, sol[1,:])
+myplot = plot!(times, sol[2,:])
