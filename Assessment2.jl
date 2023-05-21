@@ -9,7 +9,9 @@ tstart = 0 #initial time
 tend = 10 #final time
 tspan = (tstart, tend)
 
-interval = 5.0 #number of points calculated per unit time
+intervals = 20 #number of points calculated per unit time
+timesteps = (tend-tstart)*intervals #Total number of timesteps
+
 susceptibles = 0.98 #initial fraction of population susceptible
 
 b = 10 #per-capita birth rate
@@ -33,10 +35,31 @@ using OrdinaryDiffEq
 
 problem = ODEProblem(pandemicDEs!, ics, tspan)
 
-sol = solve(problem, Tsit5()) #stored as a 2 dimensional array. Access as sol[i,:]. i=1 gives time, i=2,3,4 give u,v,w respectively.
+times = LinRange(tstart, tend, Int(timesteps))
 
-times = LinRange(tstart, tend, length(sol[1,:]))
+sol = solve(problem, Tsit5(), saveat=times) #stored as a 2 dimensional array. Access as sol[i,:]. i=1,2,3 give u,v,w respectively.
 
 
-myplot = plot(times, sol[1,:])
-myplot = plot!(times, sol[2,:])
+
+
+#||||----Plotting----|||||#
+
+using LaTeXStrings
+using ColorSchemes
+using Statistics
+using Measures
+
+gr(size=(900,500), xtickfontsize=10, ytickfontsize=10, xguidefontsize=16, yguidefontsize=16, legendfontsize=16, dpi=100, framestyle = :box, grid = :xy);
+
+colorFunc(i, names) = get(ColorSchemes.seaborn_bright,i./length(names))
+seriesNames = [L"u",L"v",L"w"] 
+
+myplot = plot(legend =:outertopright, left_margin=8mm, top_margin = 4mm, bottom_margin = 8mm, xlims=[tstart,tend], ylims=[0,1])
+
+for i in 1:length(seriesNames)
+    plot!(times, sol[i,:], color = colorFunc(i, seriesNames), linewidth=3, label = seriesNames[i])
+end#for
+
+
+plot!(xlabel="Time (units?)") #L"" declares a latex string.
+plot!(ylabel= "Proportion of Population")
