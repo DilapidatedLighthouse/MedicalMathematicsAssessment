@@ -2,8 +2,7 @@
 
     #||||----Variables----||||#
 
-saveLocation = "C:/Users/joemu/Desktop/Uni Stuff/Medical Mathematics/MedicalMathematicsAssessment/Plots"
-
+saveLocation = "C:/Users/joemu/Desktop/Uni Stuff/Medical Mathematics/MedicalMathematicsAssessment/Plots" #file path of folder where figures will be saved
 #--Model Parameters--#
 R = 10 #Basic reproductive rate
 vac = 0.00 #proportion of the population vaccinated
@@ -30,7 +29,7 @@ ics = [susceptibles, 1-susceptibles, 0] #initial conditions for DE problem. u_0,
 function pandemicDEs!(du,u,p,t) #p = initial conditions, t = timespan in form of tuple (start,end)
     du[1] = (b/(b+c))*(1-vac-u[1]) - R*u[1]*u[2]
     du[2] = (R*u[1] - 1)*u[2]
-    du[3] =  (b/(b+c))*vac + (c/(b+c))*u[2]-(b/(b+c))*u[3]
+    du[3] =  (b/(b+c))*vac + (c/(c+b))*u[2]-(b/(b+c))*u[3]
 end#Function
 
 
@@ -56,8 +55,8 @@ using LaTeXStrings #Allows latex in plot labels, legends, etc
 using ColorSchemes #A library of colour pallets
 using Measures #Used here for setting libraries
 
-#In order this sets: size of the plot, font size of tick labels, font size of x labels, font size of y labels, font size in the ledend, and puts a full border around the graph 
-gr(size=(900,500), xtickfontsize=10, ytickfontsize=10, xguidefontsize=16, yguidefontsize=16, legendfontsize=16, framestyle = :box);
+#In order this sets: size of the plot, font size of tick labels, font size of x labels, font size of y labels, font size in the ledend, and puts a full border around the graph, then sets the margins of the graph
+gr(xlabel="Time", ylabel= "Proportion of Population", size=(900,500), xtickfontsize=10, ytickfontsize=10, xguidefontsize=16, yguidefontsize=16, legendfontsize=16, framestyle = :box, left_margin=8mm, top_margin = 4mm, bottom_margin = 8mm,);
 
 #Used for asigning colours to lines in plot by sampling evenly spaced points from a gradient
 colorFunc(i, names) = get(ColorSchemes.seaborn_bright,i./length(names))
@@ -73,7 +72,7 @@ function plotConcentrationsWithTime(times, sol, colorFunc, seriesNames)
     end#for
 
     #sets the x and y labels
-    plot!(xlabel="Time (units?)") #L"" declares a latex string.
+    plot!(xlabel="Time") #L"" declares a latex string.
     plot!(ylabel= "Proportion of Population")
     return myplot
 end#function
@@ -87,7 +86,7 @@ function plotConcentrationsWithTime!(times, sol, colorFunc, seriesNames)
     end#for
 
     #sets the x and y labels
-    plot!(xlabel="Time (units?)") #L"" declares a latex string.
+    plot!(xlabel="Time") #L"" declares a latex string.
     plot!(ylabel= "Proportion of Population")
 end#function
 
@@ -132,21 +131,26 @@ problem = ODEProblem(pandemicDEs!, ics, tspan)
 times = LinRange(tstart, tend, Int(timesteps))
 sol1 = solve(problem, Tsit5(), saveat=times)
 
-R=1.01
+R=0.99
 
 problem = ODEProblem(pandemicDEs!, ics, tspan)
 times = LinRange(tstart, tend, Int(timesteps))
 sol2 = solve(problem, Tsit5(), saveat=times)
+seriesNames = [L"u: R=1",L"v: R=1",L"w: R=1"] 
 plot1 =  plotConcentrationsWithTime(times,sol1,colorFunc,seriesNames)
 colorFunc(i, names) = get(ColorSchemes.glasbey_bw_minc_20_hue_150_280_n256,i./length(names))
+seriesNames = [L"u: R=0.99",L"v: R=0.99",L"w: R=0.99"] 
 plotConcentrationsWithTime!(times,sol2,colorFunc,seriesNames)
 savefig(string(saveLocation, "/noVaccR1R01.png"))
+
+
+
 # R = 1 and R = 1.01 close up #
 tstart = 0 #initial time
 tend = 800 #final time
 tspan = (tstart, tend) #for passing into DE solver
 
-seriesNames = [L"v: R=1", L"v: R=1.01", L"v: R=1.01"]
+seriesNames = [L"v: R=1", L"v: R=1.01", L"v: R=0.99"]
 
 R=1
 problem = ODEProblem(pandemicDEs!, ics, tspan)
@@ -168,17 +172,62 @@ colorFunc(i, names) = get(ColorSchemes.seaborn_bright,i./length(names))
 plot1 =  plot(times, sol1[2,:], color = colorFunc(1, seriesNames), linewidth=4, label = seriesNames[1], linealpha=1)
 plot!(times, sol2[2,:], color = colorFunc(2, seriesNames), linewidth=4, label = seriesNames[2], linealpha=1)
 plot!(times, sol3[2,:], color = colorFunc(3, seriesNames), linewidth=4, label = seriesNames[3], linealpha=1, legend =:outertopright)
+plot!(left_margin = 8mm, bottom_margin = 8mm)
 savefig(string(saveLocation, "/noVaccR1R01End.png"))
 
 
 #--Vaccination Model--#
 # set R=3
+R = 3 #Basic reproductive rate
+b = 10 #per-capita birth rate
+c = 10*b #recovery rate from disease
 
+#--Solution Parameters--#
+tstart = 0 #initial time
+tend = 40 #final time
+tspan = (tstart, tend) #for passing into DE solver
 # vac = 0.5 #
+vac=0.5
+seriesNames = [L"u",L"v",L"w"] 
+problem = ODEProblem(pandemicDEs!, ics, tspan)
+times = LinRange(tstart, tend, Int(timesteps))
+sol = solve(problem, Tsit5(), saveat=times) 
+plot1 =  plotConcentrationsWithTime(times,sol,colorFunc,seriesNames)
+savefig(string(saveLocation, "/Vacc05R3.png"))
 
 # vac = 0.8 #
+vac=0.8
+R=10
+seriesNames = [L"u",L"v",L"w"] 
+problem = ODEProblem(pandemicDEs!, ics, tspan)
+times = LinRange(tstart, tend, Int(timesteps))
+sol = solve(problem, Tsit5(), saveat=times) 
+plot1 =  plotConcentrationsWithTime(times,sol,colorFunc,seriesNames)
+savefig(string(saveLocation, "/Vacc08R10.png"))
+
 
 #Critical vac values
+R=3
+tstart = 0 #initial time
+tend = 800 #final time
+tspan = (tstart, tend) #for passing into DE solver
+vac = 0.66
+seriesNames = [L"v: p = 0.66",L"v: p = 0.67", L"v: p = 0.68"] 
+problem = ODEProblem(pandemicDEs!, ics, tspan)
+times = LinRange(tend-20, tend, Int(timesteps))
+sol = solve(problem, Tsit5(), saveat=times) 
+vac = 0.67
+problem = ODEProblem(pandemicDEs!, ics, tspan)
+sol2 = solve(problem, Tsit5(), saveat=times) 
+vac = 0.68
+problem = ODEProblem(pandemicDEs!, ics, tspan)
+sol3 = solve(problem, Tsit5(), saveat=times) 
+plot1 =  plot(times, sol[2,:], color = colorFunc(1, seriesNames), linewidth = 4, label = seriesNames[1], linealpha = 1, legend = :outertopright)
+plot!(times, sol2[2,:], color = colorFunc(2, seriesNames), linewidth = 4, label = seriesNames[2], linealpha = 1)
+#savefig(string(saveLocation, "/VaccR066R067End.png"))
+
+
+
 
 #Critical vac values zoomed in
 
